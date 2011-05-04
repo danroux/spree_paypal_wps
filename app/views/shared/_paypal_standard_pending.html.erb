@@ -1,0 +1,10 @@
+<h1>Pago en Proceso</h1>
+<p>
+  Tu pago está siendo procesado, gracias por tu paciencia.
+</p>
+
+<%= render :partial => 'shared/order_details', :locals => {:order => @order} -%>
+
+<div class="form-buttons">
+  <%= button_to "Revisar estado de pago", "/orders/#{@order.number}/checkout/paypal_confirm", :class => "button primary" %>
+</div>
