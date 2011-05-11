@@ -14,10 +14,8 @@ Rails.application.routes.draw do
 
   resources :orders do |order|
     resource :checkout, :controller => "checkout" do
-      member do
-        match 'paypal_payment'
-        match 'paypal_confirm'
-      end
+      match :paypal_payment, :on => :member
+      match :paypal_confirm, :on => :member
     end
   end
 end
