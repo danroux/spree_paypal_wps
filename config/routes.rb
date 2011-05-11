@@ -11,4 +11,13 @@ Rails.application.routes.draw do
   #    order.resources :paypal_payments, :member => {:capture => :get, :refund => :any}, :has_many => [:txns]
   #  end
   #end
+
+  resources :orders do |order|
+    resource :checkout, :controller => "checkout" do
+      member do
+        match 'paypal_payment'
+        match 'paypal_confirm'
+      end
+    end
+  end
 end

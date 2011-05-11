@@ -14,7 +14,7 @@ module SpreePaypalWps
       PaymentMethod::PaypalStandard.register
 
       # inject paypal code into orders controller
-      CheckoutsController.class_eval do
+      CheckoutController.class_eval do
         include Spree::PaypalStandard
       end
     end
