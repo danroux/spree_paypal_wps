@@ -3,13 +3,12 @@ module Spree::PaypalStandard
 
   def self.included(target)
     target.before_filter :redirect_to_paypal_standard_form_if_needed, :only => [:update]
-    target.skip_before_filter :load_data, :only => [:paypal_confirm]
   end
 
   # Outbound redirect to PayPal from checkout payments step
   def paypal_payment
     load_order
-    opts = all_opts(@order, params[:payment_method_id], 'payment')
+    opts = all_opts(@order, params[:payment_method_id], 'checkout')
 
     url_params = "?"
     url_params += "business=#{payment_method.preferences["account"]}"
@@ -36,7 +35,6 @@ module Spree::PaypalStandard
   # Inbound post from PayPal after (possible) successful completion
   def paypal_confirm
     load_order
-    debugger
     if(@order.completed_at && @order.state == "paid")
       order_params = {:checkout_complete => true}
       session[:order_id] = nil
@@ -52,7 +50,13 @@ module Spree::PaypalStandard
     return unless params[:state] == "payment"
 
     load_order
-    payment_method = PaymentMethod.find(params[:order][:payments_attributes].first[:payment_method_id])
+
+    # a bit of a hack because in production params[:order] stragely disappears
+    if params[:order] && params[:order][:payments_attributes]#.first[:payment_method_id]
+      payment_method = PaymentMethod.find(params[:order][:payments_attributes].first[:payment_method_id])
+    else
+      payment_method = PaymentMethod.find_by_type("PaymentMethod::PaypalStandard")
+    end
 
     if(payment_method.kind_of?(PaymentMethod::PaypalStandard))
       redirect_to(paypal_payment_order_checkout_url(@order, :payment_method_id => payment_method))
@@ -84,13 +88,13 @@ module Spree::PaypalStandard
     end
 
     #add each credit a line item to ensure totals sum up correctly
-#    credits = order.credits.map do |credit|
- #     { :name        => credit.description,
-  #      :description => credit.description,
-   #     :sku         => credit.id,
-    #    :qty         => 1,
-     #   :amount      => (credit.amount*100).to_i }
-    #end
+    credits = order.adjustments.map do |credit|
+      { :name        => credit.label,
+        :description => credit.label,
+        :sku         => credit.id,
+        :qty         => 1,
+        :amount      => (credit.amount*100).to_i }
+    end
 
 #    items.concat credits
 
@@ -107,7 +111,7 @@ module Spree::PaypalStandard
 
       # get the main totals from the items (already *100)
       opts[:subtotal] = opts[:items].map {|i| i[:amount] * i[:qty] }.sum
-      opts[:tax]      = opts[:items].map {|i| i[:tax]    * i[:qty] }.sum
+      #opts[:tax]      = opts[:items].map {|i| i[:tax]    * i[:qty] }.sum
       opts[:handling] = 0
       opts[:shipping] = (order.ship_total*100).to_i
 
@@ -118,7 +122,7 @@ module Spree::PaypalStandard
 
     elsif  stage == "payment"
       #use real totals are we are paying via paypal (spree checkout almost complete)
-      opts[:subtotal] = ((order.item_total * 100))# + (order.credits.total * 100)).to_i
+      opts[:subtotal] = ((order.item_total * 100) + (order.adjustments.total * 100)).to_i
       opts[:tax]      = (order.tax_total*100).to_i
       opts[:shipping] = (order.ship_total*100).to_i
 
