@@ -11,20 +11,21 @@ module Spree::PaypalStandard
     opts = all_opts(@order, params[:payment_method_id], 'checkout')
 
     url_params = "?"
-    url_params += "business=#{payment_method.preferences["account"]}"
-    url_params += "&cmd=_cart"
-    url_params += "&currency_code=MXN"
-    url_params += "&charset=utf-8"
-    url_params += "&return=" + CGI::escape(opts[:return_url])
-    url_params += "&no_shipping=1&no_note=1&lc=MX&upload=1"
-    url_params += "&custom=#{opts[:custom]}"
+    url_params << "business=#{payment_method.preferences["account"]}"
+    url_params << "&cmd=_cart"
+    url_params << "&currency_code=MXN"
+    url_params << "&charset=utf-8"
+    url_params << "&return=" + opts[:return_url]
+    url_params << "&no_shipping=1&no_note=1&lc=MX&upload=1"
+    url_params << "&custom=#{opts[:custom]}"
+    url_params << "&notify_url=#{notify_url}"
     counter = 1
     opts[:items].each do |item|
       item_name = item[:name]
-      url_params += "&item_name_#{counter}=#{item_name}"
-      url_params += "&item_number_#{counter}=#{item[:sku]}"
-      url_params += "&amount_#{counter}=#{item[:amount]}"
-      url_params += "&quantity_#{counter}=1"
+      url_params << "&item_name_#{counter}=#{item_name}"
+      url_params << "&item_number_#{counter}=#{item[:sku]}"
+      url_params << "&amount_#{counter}=#{item[:amount]}"
+      url_params << "&quantity_#{counter}=#{item[:qty]}"
       counter += 1
     end
     
@@ -40,7 +41,7 @@ module Spree::PaypalStandard
       session[:order_id] = nil
       redirect_to(order_url(@order, {:checkout_complete => true, :order_token => @order.token}))
     else
-      render(:partial => "shared/paypal_standard_pending", :layout => true)
+      render("shared/paypal_standard_pending", :layout => true)
     end
   end
 
@@ -148,5 +149,4 @@ module Spree::PaypalStandard
   def payment_method
     PaymentMethod.find(params[:payment_method_id])
   end
-
 end

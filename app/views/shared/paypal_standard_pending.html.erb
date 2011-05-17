@@ -6,5 +6,5 @@
 <%= render :partial => 'shared/order_details', :locals => {:order => @order} -%>
 
 <div class="form-buttons">
-  <%= button_to "Revisar estado de pago", "/orders/#{@order.number}/checkout/paypal_confirm", :class => "button primary" %>
+  <%= button_to "Revisar estado de pago", paypal_confirm_order_checkout_path(@order.number), :class => "button primary" %>
 </div>

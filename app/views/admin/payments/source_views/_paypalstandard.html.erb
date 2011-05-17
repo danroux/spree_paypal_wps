@@ -31,29 +31,29 @@
 <fieldset>
   <legend><%= t('transactions') %></legend>
 
-  <% payment.txns.reverse.each do |txn| %>
-    <table class="index">
-      <tr>
-        <th colspan="6"><%= t('transaction') %> <%= txn.transaction_id %> -  <%= txn.created_at.to_s(:date_time24) %></th>
+  <% txn = payment.source.paypal_txn %>
+  <table class="index">
+    <tr>
+      <th colspan="6"><%= t('transaction') %> <%= txn.txn_id %> -  <%= txn.created_at.to_s(:date_time24) %></th>
       </tr>
       <tr>
         <td width="12%;"><label><%= t('type') %>:</label></td>
         <td width="20%;">
-          <%= txn.txn_type_name %>
+          <%= txn.txn_type %>
         </td>
-        <td width="8%;"><label><%= t("result") %>:</label></td>
+        <td width="15%;"><label><%= t("transaction_id") %>:</label></td>
         <td width="20%;">
-          <%= txn.response_code %>
+          <%= payment.source.paypal_txn.txn_id %>
         </td>
         <td width="15%;"><label><%= t("amount") %>:</label></td>
         <td width="20%;">
-          <%= number_to_currency txn.amount %>
+          <%= number_to_currency txn.gross_amount %>
         </td>
       </tr>
       <tr>
-        <td><label><%= t("comment") %>:</label></td>
+        <td><label><%= t("payment_type") %>:</label></td>
         <td colspan="3">
-          <%= txn.message %>
+          <%= payment.source.paypal_txn.payment_type %>
         </td>
         <td><label><%= t("status") %>:</label></td>
         <td>
@@ -69,6 +69,5 @@
         </tr>
       <% end %>
     </table>
-  <% end %>
 
 </fieldset>

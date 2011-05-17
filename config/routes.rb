@@ -1,21 +1,26 @@
 Rails.application.routes.draw do
-  # TODO: translate these routes to rails 3 format.
-  #map.resources :orders do |order|
-  #  order.resource :checkout, :member => { :paypal_payment => :any, :paypal_confirm => :any }
-  #end
-
-  #map.paypal_notify "/paypal_notify", :controller => :paypal_standard_callbacks, :action => :notify, :method => [:post, :get]
-
-  #map.namespace :admin do |admin|
-  #  admin.resources :orders do |order|
-  #    order.resources :paypal_payments, :member => {:capture => :get, :refund => :any}, :has_many => [:txns]
-  #  end
-  #end
-
   resources :orders do |order|
     resource :checkout, :controller => "checkout" do
-      match :paypal_payment, :on => :member
-      match :paypal_confirm, :on => :member
+      member do 
+        get :paypal_checkout
+        get :paypal_payment
+        match "paypal_confirm"
+        get :paypal_finish
+      end
+    end
+  end
+
+  match "/ipn" => "paypal_standard_callbacks#notify", :as => :notify, :via => [ :get, :post ]
+
+  resources :paypal_standard_callbacks
+  namespace :admin do
+    resources :orders do
+      resources :paypal_payments do
+        member do
+          get :refund
+          get :capture
+        end       
+      end
     end
   end
 end
